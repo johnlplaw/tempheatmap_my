@@ -17,8 +17,7 @@ library(leaflet.extras)
 # Load the cities data (to obtain the coordinates of the cities in Malaysia)
 # The cities list is obtained from http://bulk.openweathermap.org/sample/city.list.json.gz
 # city.list.json.gz is a zipped file. To load the cities information, unzip the file first.
-cityListJsonFile <- 'city.list.json'
-cityListDF <- fromJSON(cityListJsonFile) 
+cityListDF <- fromJSON("city.list.json.gz")
 mycityListDF <- subset(cityListDF, cityListDF$country == 'MY')
 
 ## Obtain the corrdinates to include all the cities in Malaysia by calculating the Latitude and Longitude
