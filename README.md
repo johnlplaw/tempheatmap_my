@@ -9,3 +9,9 @@ Group members:
 2. John Law Leh Ping (WQD170020)
 3. Lee Joe Juan
 4. See Kai Jun (WQD170008)
+
+```{r}
+library(shiny)     
+#name of the app dir and username
+runGitHub("tempheatmap_my", "johnlplaw")
+```
