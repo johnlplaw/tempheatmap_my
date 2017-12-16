@@ -9,6 +9,7 @@
 
 # Library
 library(shiny)
+library(curl)
 library(jsonlite)
 library(data.table)
 library(leaflet)
@@ -16,9 +17,12 @@ library(leaflet.extras)
 
 # Load the cities data (to obtain the coordinates of the cities in Malaysia)
 # The cities list is obtained from http://bulk.openweathermap.org/sample/city.list.json.gz
-# city.list.json.gz is a zipped file. To load the cities information, unzip the file first.
-cityListDF <- fromJSON("city.list.json.gz")
-mycityListDF <- subset(cityListDF, cityListDF$country == 'MY')
+# city.list.json.gz is a zipped file. 
+ cityListDF <- fromJSON("city.list.json.gz")
+ mycityListDF <- subset(cityListDF, cityListDF$country == 'MY')
+#mycityListDF <- fromJSON("MyData.json")
+
+print(mycityListDF)
 
 ## Obtain the corrdinates to include all the cities in Malaysia by calculating the Latitude and Longitude
 ## the value plus 1 or - 1 is for include more area 
@@ -42,7 +46,7 @@ plotMap <- function(input, output){
   # Example url:
   # http://api.openweathermap.org/data/2.5/box/city?bbox=99,0,120,10,10&appid=4e6c991cd69de992db2a57796bee4bc9
   # id = the id for querying service (4e6c991cd69de992db2a57796bee4bc9)
-  boxWeatherInfoUtl <- paste0('http://api.openweathermap.org/data/2.5/box/city?bbox=',minlon,',',minlat,',',maxlon,',',maxlat,',','200','&appid=bd5e378503939ddaee76f12ad7a97608', sep='')
+  boxWeatherInfoUtl <- paste0('http://api.openweathermap.org/data/2.5/box/city?bbox=',minlon,',',minlat,',',maxlon,',',maxlat,',','200','&appid=4e6c991cd69de992db2a57796bee4bc9', sep='')
   allWeatherInfo <- fromJSON(boxWeatherInfoUtl)
   
   # Extract the data from the responded data to fit into Leftlet map ploting parameters
@@ -68,9 +72,12 @@ plotMap <- function(input, output){
     leaflet() %>%
       addTiles() %>%
       #addMarkers(lng=lon.list, lat=lat.list,  popup=popup.list, label = popup.list ) %>%
-      addHeatmap(lng=lon.list, lat=lat.list, minOpacity = 0.00,max = 100.00, blur = 50, intensity = (temp.list), gradient = c('blue','red'), radius = 40)
+      addHeatmap(lng=lon.list, lat=lat.list, minOpacity = input$opacity[1], max = input$opacity[2], blur = input$blur, 
+                 intensity = (temp.list), gradient = c('yellow','red'), radius = input$radian)
   })
 }
+
+
 
 # shiny server
 shinyServer(function(input, output) {
@@ -80,6 +87,21 @@ shinyServer(function(input, output) {
   observeEvent(input$do, {
       # reload data
       plotMap(input, output)
+  })
+  
+  observeEvent(input$opacity, {
+    # reload data
+    plotMap(input, output)
+  })
+  
+  observeEvent(input$blur, {
+    # reload data
+    plotMap(input, output)
+  })
+  
+  observeEvent(input$radian, {
+    # reload data
+    plotMap(input, output)
   })
   
 })
