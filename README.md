@@ -5,9 +5,9 @@ Group project for WQD7001 Principles Of Data Science
 19/12/2017
 
 Group members:
-1. Low Cheng Kuan
+1. Low Cheng Kuan (WQD170013)
 2. John Law Leh Ping (WQD170020)
-3. Lee Joe Juan
+3. Lee Joe Juan (WQD170014)
 4. See Kai Jun (WQD170008)
 
 ```{r}
