@@ -16,18 +16,23 @@ library(leaflet)
 library(leaflet.extras)
 
 #UI
-shinyUI(fluidPage(
+shinyUI(
+  fluidPage(
   
-  # Application title
-  titlePanel("Temperature HeatMap for cities in Malaysia"),
+    headerPanel("Temperature HeatMap for cities in Malaysia"),
+    sidebarPanel(
+      actionButton("do", "Reload"),
+      sliderInput("opacity", "Opacity",
+                  min = -50., max = 50., value = c(20, 40)),
+      sliderInput("blur", "Blur", 
+                  min = 0, max = 100, value= 20),
+      sliderInput("radian", "radian", 
+                  min = 0, max = 50, value= 20)
+    ),
+    mainPanel(
+      # Use imageOutput to place the image on the page
+      leafletOutput("mymap")
+    )
+  )
 
-  leafletOutput("mymap"),
-  actionButton("do", "Reload"),
-  sliderInput("opacity", "Opacity",
-              min = -50., max = 50., value = c(20, 40)),
-  sliderInput("blur", "Blur", 
-              min = 0, max = 100, value= 20),
-  sliderInput("radian", "radian", 
-              min = 0, max = 50, value= 20)
-  
-))
+)
