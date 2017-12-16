@@ -64,7 +64,7 @@ plotMap <- function(input, output){
   temp.list <- latestCityTemp$temp      # temperature list
   
   #Popup marker
-  #popup.list <- paste0(latestCityTemp$name, ', ', latestCityTemp$temp, intToUtf8(176), 'C')
+  popup.list <- paste0(latestCityTemp$name, ', ', latestCityTemp$temp, intToUtf8(176), 'C')
   
   # Rendering the leftlet map plotting
   output$mymap <- renderLeaflet({
@@ -72,8 +72,8 @@ plotMap <- function(input, output){
     leaflet() %>%
       addTiles() %>%
       #addMarkers(lng=lon.list, lat=lat.list,  popup=popup.list, label = popup.list ) %>%
-      addHeatmap(lng=lon.list, lat=lat.list, minOpacity = input$opacity[1], max = input$opacity[2], blur = input$blur, 
-                 intensity = (temp.list), gradient = c('yellow','red'), radius = input$radian)
+      addHeatmap(lng=lon.list, lat=lat.list, minOpacity = input$opacity[1], max = input$opacity[2], blur = input$blur, intensity = (temp.list), gradient = c('yellow','red'), radius = input$radian)%>%
+      addCircleMarkers( radius = 6, color = 'red', stroke = FALSE, fillOpacity = 0.5, lng=lon.list, lat=lat.list,  popup=popup.list, label = popup.list)
   })
 }
 
