@@ -1,0 +1,171 @@
+---
+title: "Temperature Heat Map for cities in Malaysia"
+author: "Low Cheng Kuan, John Law Leh Ping, Lee Joe Juan, See Kai Jun"
+date: "12/19/2017"
+output: ioslides_presentation
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(vioplot)
+library(jsonlite)
+library(shiny)
+library(shinyjs)
+library(curl)
+library(data.table)
+library(leaflet)
+library(leaflet.extras)
+
+```
+
+## Objective
+
+Capture and display Malaysia temperature / weather in heat map in real time.
+<br>
+<br>
+Steps taken
+<li> Obtain a list of coordinates for total of 220 cities in Malaysia (http://bulk.openweathermap.org/sample/city.list.json.gz)
+<li> Query live data from openweathermap API (http://api.openweathermap.org/data/2.5/box/city)
+<li> Extract temperature data for Malaysia Cities
+<li> Render data into parameters and plot Leftlet map
+
+## Data info
+Data for cities in Malaysia
+```{r, echo=FALSE}
+cityListDF <- fromJSON("city.list.json.gz")
+mycityListDF <- subset(cityListDF, cityListDF$country == 'MY')
+```
+
+```{r}
+str(mycityListDF)
+```
+
+```{r}
+minlon <- min(mycityListDF$coord$lon) - 1  
+maxlon <- max(mycityListDF$coord$lon) + 1
+minlat <- min(mycityListDF$coord$lat) - 1
+maxlat <- max(mycityListDF$coord$lat) + 1
+
+boxWeatherInfoUtl <- paste0('http://api.openweathermap.org/data/2.5/box/city?bbox=',minlon,',',minlat,',',maxlon,',',maxlat,',','200','&appid=4e6c991cd69de992db2a57796bee4bc9', sep='')
+allWeatherInfo <- fromJSON(boxWeatherInfoUtl)
+
+id = allWeatherInfo$list$id
+temp = allWeatherInfo$list$main$temp
+resultWeather <- data.frame(id, temp)
+
+latestCityTemp <- merge( mycityListDF, resultWeather, by=c("id"))
+
+```
+
+## Weather Data
+
+```{r}
+str(latestCityTemp)
+```
+
+## The find out of data
+
+violin plot displays density and distribution of temperatures
+
+```{r, echo=FALSE, fig.width=8, fig.heighth=10}
+vioplot(latestCityTemp$temp, col=rgb(0.1,0.4,0.7,0.7), names="temperature", horizontal=TRUE )
+```
+
+## Top 5 Hotest and Coldest Cities in Malaysia
+
+```{r, echo=FALSE}
+head(latestCityTemp[order(latestCityTemp$temp,decreasing=TRUE),c("name","temp")],n=5)
+tail(latestCityTemp[order(latestCityTemp$temp,decreasing=TRUE),c("name","temp")],n=5)
+ 
+```
+
+## Interactive Plot
+
+```{r eruptions}
+
+plotMap <- function(input, output){
+  
+  # Querying live data from openweathermap API
+  # Example url:
+  # http://api.openweathermap.org/data/2.5/box/city?bbox=99,0,120,10,10&appid=4e6c991cd69de992db2a57796bee4bc9
+  # id = the id for querying service (4e6c991cd69de992db2a57796bee4bc9)
+  boxWeatherInfoUtl <- paste0('http://api.openweathermap.org/data/2.5/box/city?bbox=',minlon,',',minlat,',',maxlon,',',maxlat,',','200','&appid=4e6c991cd69de992db2a57796bee4bc9', sep='')
+  allWeatherInfo <- fromJSON(boxWeatherInfoUtl)
+  
+  # Extract the data from the responded data to fit into Leftlet map ploting parameters
+  # 
+  id = allWeatherInfo$list$id
+  temp = allWeatherInfo$list$main$temp
+  resultWeather <- data.frame(id, temp)
+  
+  # Only select the cities in Malaysia
+  latestCityTemp <- merge( mycityListDF, resultWeather, by=c("id"))
+  
+  #Extract the lists required for map plotting
+  lon.list <- latestCityTemp$coord$lon  # longitude list
+  lat.list <- latestCityTemp$coord$lat  # longitude list
+  temp.list <- latestCityTemp$temp      # temperature list
+  
+  #Popup marker
+  popup.list <- paste0(latestCityTemp$name, ', ', latestCityTemp$temp, intToUtf8(176), 'C')
+  
+  # Rendering the leftlet map plotting
+  output$mymap <- renderLeaflet({
+    
+    leaflet() %>%
+      addTiles() %>%
+      #addMarkers(lng=lon.list, lat=lat.list,  popup=popup.list, label = popup.list ) %>%
+      addHeatmap(lng=lon.list, lat=lat.list, minOpacity = input$opacity[1], max = input$opacity[2], blur = input$blur, intensity = (temp.list), gradient = c('yellow','red'), radius = input$radian)%>%
+      addCircleMarkers( radius = 6, color = 'red', stroke = FALSE, fillOpacity = 0.5, lng=lon.list, lat=lat.list,  popup=popup.list, label = popup.list)
+  })
+}
+
+pageWithSidebar(
+  headerPanel("Temperature HeatMap for cities in Malaysia"),
+  sidebarPanel(
+    actionButton("do", "Reload"),
+  sliderInput("opacity", "Opacity",
+              min = -50., max = 50., value = c(20, 40)),
+  sliderInput("blur", "Blur", 
+              min = 0, max = 100, value= 20),
+  sliderInput("radian", "radian", 
+              min = 0, max = 50, value= 20)
+  ),
+  mainPanel(
+    # Use imageOutput to place the image on the page
+    leafletOutput("mymap")
+  )
+)
+
+
+inputPanel(
+  #titlePanel("Temperature HeatMap for cities in Malaysia"),
+  
+)
+
+renderPlot({
+  plotMap(input, output)
+  
+  observeEvent(input$do, {
+      # reload data
+      plotMap(input, output)
+  })
+  
+  observeEvent(input$opacity, {
+    # reload data
+    plotMap(input, output)
+  })
+  
+  observeEvent(input$blur, {
+    # reload data
+    plotMap(input, output)
+  })
+  
+  observeEvent(input$radian, {
+    # reload data
+    plotMap(input, output)
+  })
+})
+```
